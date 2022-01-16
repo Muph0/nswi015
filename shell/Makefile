@@ -48,9 +48,11 @@ run: all
 
 clean:
 	$F
-	rm -f src/*.o src/*.dep src/*.yy.c src/*.yy.h inc/*.gch
+	rm -f src/*.o src/*.dep src/*.yy.c inc/*.yy.h inc/*.gch
 	$F
 	rm -f *.o *.dep
+	$F
+	rm $(SHELL_BIN)
 
 $(SHELL_BIN): %: $(ALL_OBJ) $(STATIC_LIBS)
 	$F
@@ -90,7 +92,7 @@ list: # check all paths are correctly set up
 
 .PRECIOUS: %.dep
 
-%.dep: %.c
+%.dep: %.c $(BISON_SRC) $(FLEX_SRC)
 	$F
 	$(CC) $(DEPFLAGS) $(realpath $<)
 #	cat $*.dep

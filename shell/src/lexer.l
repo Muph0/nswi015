@@ -16,25 +16,26 @@
 
 %x LINE_COMMENT
 
-WHITESPACE [ \t]+
-NAME_CHAR [^ \n\t;|\{\}]
+WHITESPACE      [ \t]+
+NAME_CHAR       [^ \n\t;\|\$\{\}]
 
 %%
 
 <LINE_COMMENT>{
-"\n"            { BEGIN(INITIAL); return ENDL; }
-.               { }
+"\n"			{ BEGIN(INITIAL); return ENDL; }
+.				{ }
 }
 
-";"             { return SEMIC; }
-"\n"            { return ENDL; }
-"#"             { BEGIN(LINE_COMMENT); }
+";"				{ return SEMIC; }
+"\n"			{ return ENDL; }
+"#"				{ BEGIN(LINE_COMMENT); }
 
-{NAME_CHAR}+    { yylval->name = strdup(yytext); return NAME; }
-${NAME_CHAR}+   { yylval->name = strdup(yytext + 1); return VAR; }
+{NAME_CHAR}+	{ yylval->name = strdup(yytext); return NAME; }
+\${NAME_CHAR}+	{ yylval->name = strdup(yytext + 1); return VAR; }
+\$\$			{ yylval->name = strdup("$"); return VAR; }
 
-{WHITESPACE}    { }
-.               { LEXERR("Unknown symbol '%s'.\n", yytext); return ENDL; }
+{WHITESPACE}	{ }
+.				{ LEXERR("Unknown symbol '%s'.\n", yytext); return ENDL; }
 
-<<EOF>>         { return YYEOF; }
+<<EOF>>			{ return YYEOF; }
 

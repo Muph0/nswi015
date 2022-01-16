@@ -92,7 +92,7 @@ list: # check all paths are correctly set up
 
 .PRECIOUS: %.dep
 
-%.dep: %.c $(BISON_SRC) $(FLEX_SRC)
+%.dep: %.c | $(BISON_SRC) $(FLEX_SRC)
 	$F
 	$(CC) $(DEPFLAGS) $(realpath $<)
 #	cat $*.dep

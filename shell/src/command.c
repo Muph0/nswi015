@@ -10,7 +10,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static int exit_code_;
+static int exit_code_ = 0;
 int last_exit_code() { return exit_code_; }
 
 /**
@@ -54,19 +54,21 @@ runerr_t run_command(char **argv, int argc, int *exit_code) {
             }
             // child gets killed magically on its own (?)
         } while (cpid != pid);
+
+        retval = RUNERR_OK;
     }
 
     tracef("exit_code=%d", *exit_code);
     exit_code_ = *exit_code;
-    return RUNERR_OK;
+    return retval;
 }
 
 runerr_t run_internal_command(char **argv, int argc, int *exit_code) {
-#define if_command(cmd) if (strcmp(argv[0], cmd) == 0)
     assert(argc >= 1);
+#define if_command(cmd) if (strcmp(argv[0], cmd) == 0)
 
     if_command("exit") {
-        u_int8_t code = 0;
+        u_int8_t code = last_exit_code();
         if (argc > 1) {
             char *end;
             code = strtol(argv[1], &end, 10);

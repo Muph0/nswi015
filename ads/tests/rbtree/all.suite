@@ -1,0 +1,6 @@
+run tests/rbtree/prop-tests
+run tests/rbtree/insert-c1
+run tests/rbtree/insert-c2
+run tests/rbtree/insert-c3
+run tests/rbtree/insert-c4
+run tests/rbtree/insert-complex

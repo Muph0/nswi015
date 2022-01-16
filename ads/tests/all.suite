@@ -1,0 +1,3 @@
+suite tests/struct/all.suite
+suite tests/rbtree/all.suite
+suite tests/alist/all.suite

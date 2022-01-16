@@ -1,0 +1,7 @@
+run tests/alist/append
+run tests/alist/create
+run tests/alist/get_set
+run tests/alist/big_item
+run tests/alist/insert
+run tests/alist/remove
+run tests/alist/strings

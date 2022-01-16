@@ -1,0 +1,2 @@
+run tests/struct/offset
+run tests/struct/member

@@ -1,0 +1,15 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+ReflowComments: false
+
+DerivePointerAlignment: false
+
+AlignEscapedNewlines: DontAlign
+
+IncludeBlocks: Preserve
+#AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: Always
+...

@@ -1,0 +1,1 @@
+main(int a,char**v){while(*v)puts(*v++);}

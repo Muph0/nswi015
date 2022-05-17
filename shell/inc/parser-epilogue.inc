@@ -26,13 +26,15 @@ static int yyreport_syntax_error(const yypcontext_t *ctx) {
         enum { TOKENMAX = 5 };
         yysymbol_kind_t expected[TOKENMAX];
         int n = yypcontext_expected_tokens(ctx, expected, TOKENMAX);
-        if (n < 0)
+        if (n < 0) {
             // Forward errors to yyparse.
             res = n;
-        else
-            for (int i = 0; i < n; ++i)
+        } else {
+            for (int i = 0; i < n; ++i) {
                 fprintf(stderr, "%s %s", i == 0 ? ": expected" : " or",
                         yysymbol_name(expected[i]));
+            }
+        }
     }
     // Report the unexpected token.
     {

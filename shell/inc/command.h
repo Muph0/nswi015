@@ -4,9 +4,9 @@
 #include <stdbool.h>
 
 enum runerr {
-    RUNERR_OK = 1,
-    RUNERR_NOCMD,
-    RUNERR_REQUEST_EXIT,
+    RUNERR_OK = 1, // Command completed successfully.
+    RUNERR_NOCMD, // Command was not found.
+    RUNERR_REQUEST_EXIT, // Command completed and requested shell to exit.
 };
 
 typedef enum runerr runerr_t;

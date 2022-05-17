@@ -1,6 +1,6 @@
+#include "command.h"
 #include "debug.h"
 #include "parser.h"
-#include "command.h"
 
 #include <ctype.h>
 #include <err.h>
@@ -36,8 +36,9 @@ int main(int argc, const char **argv) {
             // parse options
         } else {
             // first non-option is a script file
-            if ((infile = open(*it, 0)) < 0) //
+            if ((infile = open(*it, 0)) < 0) {
                 err(1, "open file");
+            }
             interactive = false;
             break;
         }
@@ -69,6 +70,7 @@ static int repl() {
 
     return last_exit_code();
 }
+
 static int shell(int input_fd, bool interactive) {
     tracef("Starting parser (fd=%d, interactive=%d)", input_fd, interactive);
     shell_input_fd_ = input_fd;
@@ -81,6 +83,7 @@ static int shell(int input_fd, bool interactive) {
     int parse_err = yyparse();
     return parse_err ? parse_err : last_exit_code();
 }
+
 void lexer_input(char *buffer, int *n_bytes, int max_bytes) {
     static bool eof = false;
     int read_ret;

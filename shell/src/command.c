@@ -17,7 +17,8 @@ int last_exit_code() { return exit_code_; }
  * @brief Runs command with specified arguments.
  *
  * @param argv Null-terminated list of arguments.
- * @return Returns exit code of the command.
+ * @param exit_code Output param with exit code of the command.
+ * @returns Status of the command execution.
  */
 runerr_t run_command(char **argv, int argc, int *exit_code) {
     assert(argc >= 1);
@@ -29,8 +30,9 @@ runerr_t run_command(char **argv, int argc, int *exit_code) {
         // try external command
         int pid = fork();
 
-        if (pid == -1) err(1, "fork");
-        else if (pid == 0) {
+        if (pid == -1) {
+            err(1, "fork");
+        } else if (pid == 0) {
             // child
             execvp(argv[0], argv);
             // if returns, print error

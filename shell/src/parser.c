@@ -18,7 +18,7 @@ void sem_run_command(alist_t list) {
 
     alist_foreach(list, char *, str) {
         // created in lexer
-        if (*str) free(*str);
+        if (*str) { free(*str); }
     }
 
     // created in parser

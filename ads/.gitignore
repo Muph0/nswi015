@@ -3,3 +3,5 @@ build
 *.dep
 *.gch
 *.d
+*.a
+

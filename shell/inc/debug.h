@@ -29,7 +29,6 @@ static const char *_tracef_hidden_traces[] = {
 };
 
 static int _tracef_hidden(const char *name) {
-    //if (!TRACE_ENABLED_) return 1;
     for (unsigned int i = 0;
          i < sizeof(_tracef_hidden_traces) / sizeof(*_tracef_hidden_traces);
          i++) {

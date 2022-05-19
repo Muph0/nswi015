@@ -72,6 +72,9 @@ $(FLEX_SRC): %.yy.c: %.l
 	$F
 	flex -o $@ $(realpath $<)
 
+../ads/libads.a:
+	$F
+	make -C ../ads
 
 list: # check all paths are correctly set up
 	$F

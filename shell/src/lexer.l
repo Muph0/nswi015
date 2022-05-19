@@ -30,9 +30,9 @@ NAME_CHAR       [^ \n\t;\|\$\{\}]
 "\n"			{ return ENDL; }
 "#"				{ BEGIN(LINE_COMMENT); }
 
-{NAME_CHAR}+	{ yylval->name = strdup(yytext); return NAME; }
-\${NAME_CHAR}+	{ yylval->name = strdup(yytext + 1); return VAR; }
-\$\$			{ yylval->name = strdup("$"); return VAR; }
+{NAME_CHAR}+	{ yylval->name = sem_strdup(yytext); return NAME; }
+\${NAME_CHAR}+	{ yylval->name = sem_strdup(yytext + 1); return VAR; }
+\$\$			{ yylval->name = sem_strdup("$"); return VAR; }
 
 {WHITESPACE}	{ }
 .				{ LEXERR("Unknown symbol '%s'.\n", yytext); return ENDL; }

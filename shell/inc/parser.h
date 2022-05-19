@@ -12,6 +12,7 @@ void lexer_input(char *, int *, int);
 
 // semantic actions
 void sem_run_command(alist_t);
+char* sem_strdup(char*);
 char* sem_expand_var(char*);
 
 #endif

@@ -48,7 +48,7 @@ int main(int argc, const char **argv) {
 }
 
 static void handle_sig(int sig) {
-    tracef("Signal %d: %s", sig, strsignal(sig));
+    //tracef("Signal %d: %s", sig, strsignal(sig));
     (void)sig;
 }
 

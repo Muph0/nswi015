@@ -1,13 +1,13 @@
 #include "parser.h"
-#include "parser.yy.h"
 #include "command.h"
+#include "parser.yy.h"
 
 #include <alist.h>
 
+#include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 
 void sem_run_command(alist_t list) {
     alist_append(list, char *, NULL);
@@ -18,7 +18,7 @@ void sem_run_command(alist_t list) {
 
     alist_foreach(list, char *, str) {
         // created in lexer
-        if (*str) { free(*str); }
+        if (*str) free(*str);
     }
 
     // created in parser
@@ -44,5 +44,17 @@ char *sem_expand_var(char *name) {
     if (result) {
         return strdup(result);
     }
-    return strdup("");
+    return sem_strdup("");
+}
+
+char *sem_strdup(char *str) {
+    size_t len = strlen(str);
+    char *result = calloc(sizeof(char), len + 1);
+    if (result == NULL) {
+        err(1, "strdup");
+    }
+    for (size_t i = 0; i <= len; i++) {
+        result[i] = str[i];
+    }
+    return result;
 }

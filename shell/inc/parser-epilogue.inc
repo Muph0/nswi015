@@ -8,7 +8,7 @@
 #include <err.h>
 
 int yyerror(YYLTYPE *loc, const char *message) {
-    warnx("Parsing failed:%d.%d: %s\n", loc->first_line,
+    warnx("Syntax error:%d.%d: %s\n", loc->first_line,
                   loc->first_column, message);
 
     return 0;

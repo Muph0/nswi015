@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-//#define TRACE
+#define TRACE
 
 #define _QUOTE(x) #x
 #define QUOTE(x) _QUOTE(x)
@@ -24,7 +24,6 @@ static const char *_tracef_hidden_traces[] = {
     "yyparse",
     "lexer_input",
     "repl",
-    "handle_sig+",
     "run_command+",
 };
 

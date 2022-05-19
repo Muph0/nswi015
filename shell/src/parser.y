@@ -22,20 +22,26 @@ YY_DECL;
 %define parse.error custom
 
 %union {
-    double num;
-    char *name;
-    alist_t names;
+    char *value;
+    alist_t values;
+    struct command_part *part;
+    struct command_info *command;
+    int number;
 }
 
 %token                  SEMIC               "';'"
+%token                  PIPE                "'|'"
+%token                  REDIR_IN            "'<'"
+%token                  REDIR_OUT           "'>'"
+%token                  REDIR_OUTA          "'>>'"
 %token                  ENDL                "<newline>"
 %token                  YYEOF               "<end-of-file>"
-%token <name>           NAME                "identifier"
-%token <name>           VAR                 "variable"
+%token <value>          NAME                "identifier"
+%token <value>          VAR                 "variable"
 
-%type <names>           cmd
-%type <names>           value_list
-%type <name>            value
+%type <command>         cmd
+%type <part>            cmdpart
+//%type <number>          pipe_seq
 
 %start unit
 
@@ -58,17 +64,20 @@ cmd_seq
     : cmd                   { sem_run_command($1); }
     | cmd_seq SEMIC cmd     { sem_run_command($3); }
 ;
+//pipe_seq
+//    : cmd PIPE              { $$ = sem_run_command_to_pipe($1, -1); }
+//    | pipe_seq cmd PIPE     { $$ = sem_run_command_to_pipe($2, $1); }
+//;
 cmd
-    : value_list
+    : cmdpart           { $$ = sem_cmd_from_parts(NULL, $1); }
+    | cmd cmdpart       { $$ = sem_cmd_from_parts($1, $2); }
 ;
-value_list
-    : value             { $$ = alist_create(6, sizeof(char*));
-                            alist_append($$, char*, $1); }
-    | value_list value  { alist_append($1, char*, $2); $$ = $1; }
-;
-value
-    : NAME
+cmdpart
+    : NAME              { $$ = sem_name($1); }
     | VAR               { $$ = sem_expand_var($1); }
+    | REDIR_IN NAME     { $$ = sem_redir_in($2); }
+    | REDIR_OUT NAME    { $$ = sem_redir_out($2); }
+    | REDIR_OUTA NAME   { $$ = sem_redir_outa($2); }
 ;
 
 dumper

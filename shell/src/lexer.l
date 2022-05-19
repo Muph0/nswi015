@@ -27,12 +27,15 @@ NAME_CHAR       [^ \n\t;\|\$\{\}]
 }
 
 ";"				{ return SEMIC; }
+">>"		    { return REDIR_OUTA; }
+">"				{ return REDIR_OUT; }
+"<"				{ return REDIR_IN; }
 "\n"			{ return ENDL; }
 "#"				{ BEGIN(LINE_COMMENT); }
 
-{NAME_CHAR}+	{ yylval->name = sem_strdup(yytext); return NAME; }
-\${NAME_CHAR}+	{ yylval->name = sem_strdup(yytext + 1); return VAR; }
-\$\$			{ yylval->name = sem_strdup("$"); return VAR; }
+{NAME_CHAR}+	{ yylval->value = sem_strdup(yytext); return NAME; }
+\${NAME_CHAR}+	{ yylval->value = sem_strdup(yytext + 1); return VAR; }
+\$\$			{ yylval->value = sem_strdup("$"); return VAR; }
 
 {WHITESPACE}	{ }
 .				{ LEXERR("Unknown symbol '%s'.\n", yytext); return ENDL; }

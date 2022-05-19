@@ -1,12 +1,16 @@
 #include "command.h"
 #include "debug.h"
+#include "utils.h"
 
 #include <assert.h>
 #include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -20,7 +24,11 @@ int last_exit_code() { return exit_code_; }
  * @param exit_code Output param with exit code of the command.
  * @returns Status of the command execution.
  */
-runerr_t run_command(char **argv, int argc, int *exit_code) {
+runerr_t run_command(struct command_info *info, int *exit_code) {
+
+    int argc = alist_count(info->argv);
+    char** argv = &alist_ref(info->argv, char*, 0);
+
     assert(argc >= 1);
     tracef("(%s, argc=%d)", argv[0], argc);
 
@@ -28,12 +36,31 @@ runerr_t run_command(char **argv, int argc, int *exit_code) {
 
     if (retval == RUNERR_NOCMD) {
         // try external command
-        int pid = fork();
+        pid_t pid = fork();
 
         if (pid == -1) {
             err(1, "fork");
         } else if (pid == 0) {
             // child
+
+            // redirect io
+            if (info->redir_in.type != REDIR_TYPE_NONE) {
+                int fd = open(info->redir_in.filename, 0);
+                dup2(fd, STDIN_FILENO);
+                close(fd);
+            }
+            if (info->redir_out.type != REDIR_TYPE_NONE) {
+                int fd =
+                    open(info->redir_out.filename,
+                         O_CREAT | (info->redir_out.type == REDIR_TYPE_APPEND
+                                        ? O_APPEND
+                                        : 0));
+                dup2(fd, STDIN_FILENO);
+                close(fd);
+            }
+
+            // execvp needs nul-terminated
+            alist_append(info->argv, char *, NULL);
             execvp(argv[0], argv);
             // if returns, print error
             err(127, "unknown command");
@@ -136,4 +163,21 @@ runerr_t run_internal_command(char **argv, int argc, int *exit_code) {
 
     return RUNERR_NOCMD;
 #undef if_command
+}
+
+struct command_info *command_info_create() {
+    struct command_info *info = malloc_chk(sizeof(struct command_info));
+    info->argv = alist_create(6, sizeof(char *));
+    info->redir_in.type = REDIR_TYPE_NONE;
+    info->redir_out.type = REDIR_TYPE_NONE;
+    info->pipe_to = NULL;
+    return info;
+}
+void command_info_destroy(struct command_info *info) {
+
+    alist_foreach(info->argv, char *, it) { free(*it); }
+    alist_destroy(info->argv);
+    free(info->redir_in.filename);
+    free(info->redir_out.filename);
+    free(info);
 }

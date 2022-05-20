@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-//#define TRACE
+#define TRACE
 
 #define _QUOTE(x) #x
 #define QUOTE(x) _QUOTE(x)

@@ -100,10 +100,11 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
 
         // parent
         int waitfor = children;
-        while (waitfor--) {
+        while (waitfor) {
             int status, cpid;
             tracef("waiting for %d children", waitfor);
             cpid = wait(&status);
+            waitfor--;
             tracef("wait returned (child=%d, status=%u)", cpid, status);
 
             if (cpid == pid) { // pid of the last child

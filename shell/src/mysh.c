@@ -71,7 +71,7 @@ static void handle_sig(int sig) {
 
 static void register_sighandler(int sig) {
     struct sigaction act = {0};
-    tracef("Registering handler for signal %d: %s.", sig, strsignal(sig));
+    tracef("Registering handler for signal %d.", sig);
 
     act.sa_handler = handle_sig;
     sigaction(sig, &act, NULL);

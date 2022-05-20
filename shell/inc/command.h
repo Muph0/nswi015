@@ -13,7 +13,7 @@ enum runerr {
 typedef enum runerr runerr_t;
 
 enum redir_type {
-    REDIR_TYPE_NONE,
+    REDIR_TYPE_NONE = 0,
     REDIR_TYPE_IN,
     REDIR_TYPE_OUT,
     REDIR_TYPE_APPEND,
@@ -29,7 +29,8 @@ struct command_info {
     struct redir_info redir_out;
     struct redir_info redir_in;
 
-    struct command_info *pipe_to;
+    struct command_info *pipe_to, *pipe_from;
+    int pipefds[2];
 };
 
 int last_exit_code();

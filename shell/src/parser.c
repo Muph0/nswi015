@@ -27,6 +27,7 @@ void sem_run_command(struct command_info *cmd) {
 
 struct command_info *sem_cmd_from_parts(struct command_info *info,
                                         struct command_part *part) {
+    assert(part);
     if (info == NULL) {
         info = command_info_create();
     }
@@ -44,13 +45,25 @@ struct command_info *sem_cmd_from_parts(struct command_info *info,
         case REDIR_TYPE_IN:
             info->redir_in = part->redir;
             break;
-        default: break;
+        default:
+            break;
         }
         break;
     }
 
+    free(part);
     return info;
 }
+
+struct command_info *sem_cmd_pipe_to(struct command_info *info,
+                                     struct command_part *part) {
+    assert(info && part);
+    info->pipe_to = sem_cmd_from_parts(NULL, part);
+    info->pipe_to->pipe_from = info;
+
+    return info->pipe_to;
+}
+
 struct command_part *sem_name(char *name) {
     struct command_part *part = malloc_chk(sizeof(struct command_part));
     part->type = CMDPART_VALUE;

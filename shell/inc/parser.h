@@ -38,12 +38,15 @@ void sem_run_command(struct command_info *);
 
 struct command_info *sem_cmd_from_parts(struct command_info *,
                                     struct command_part *);
+struct command_info *sem_cmd_pipe_to(struct command_info *,
+                                    struct command_part *);
 
 struct command_part *sem_name(char *);
 struct command_part *sem_expand_var(char *);
 struct command_part *sem_redir_in(char *);
 struct command_part *sem_redir_out(char *);
 struct command_part *sem_redir_outa(char *);
+
 
 char *sem_strdup(char *);
 

@@ -36,12 +36,12 @@ YY_DECL;
 %token                  REDIR_OUTA          "'>>'"
 %token                  ENDL                "<newline>"
 %token                  YYEOF               "<end-of-file>"
-%token <value>          NAME                "identifier"
+%token <value>          VALUE               "identifier"
 %token <value>          VAR                 "variable"
 
 %type <command>         cmd
 %type <part>            cmdpart
-//%type <number>          pipe_seq
+%type <part>            pipe_seq
 
 %start unit
 
@@ -65,19 +65,20 @@ cmd_seq
     | cmd_seq SEMIC cmd     { sem_run_command($3); }
 ;
 //pipe_seq
-//    : cmd PIPE              { $$ = sem_run_command_to_pipe($1, -1); }
+//    : cmd                   { $$ = sem_run_command_to_pipe($1, -1); }
 //    | pipe_seq cmd PIPE     { $$ = sem_run_command_to_pipe($2, $1); }
 //;
 cmd
     : cmdpart           { $$ = sem_cmd_from_parts(NULL, $1); }
     | cmd cmdpart       { $$ = sem_cmd_from_parts($1, $2); }
+    | cmd PIPE cmdpart  { $$ = sem_cmd_pipe_to($1, $2); }
 ;
 cmdpart
-    : NAME              { $$ = sem_name($1); }
+    : VALUE             { $$ = sem_name($1); }
     | VAR               { $$ = sem_expand_var($1); }
-    | REDIR_IN NAME     { $$ = sem_redir_in($2); }
-    | REDIR_OUT NAME    { $$ = sem_redir_out($2); }
-    | REDIR_OUTA NAME   { $$ = sem_redir_outa($2); }
+    | REDIR_IN VALUE    { $$ = sem_redir_in($2); }
+    | REDIR_OUT VALUE   { $$ = sem_redir_out($2); }
+    | REDIR_OUTA VALUE  { $$ = sem_redir_outa($2); }
 ;
 
 dumper
@@ -86,7 +87,7 @@ dumper
 ;
 dumper_token
     : YYEOF { printf("%d:%d: YYEOF\n", @1.first_line, @1.first_column); }
-    | NAME { printf("%d:%d: NAME: %s\n", @1.first_line, @1.first_column, $1); }
+    | VALUE { printf("%d:%d: VALUE: %s\n", @1.first_line, @1.first_column, $1); }
     | VAR { printf("%d:%d: VAR: %s\n", @1.first_line, @1.first_column, $1); }
     | ENDL { printf("%d:%d: ENDL\n", @1.first_line, @1.first_column); }
     | SEMIC { printf("%d:%d: SEMIC\n", @1.first_line, @1.first_column); }

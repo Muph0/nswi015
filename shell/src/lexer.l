@@ -8,6 +8,11 @@
     loc_next(yylloc, yytext); \
 }
 
+
+/*"\>\>{s}*{VALUE}" { yylval->part = sem_redir_outa(sem_strdup(yytext)); return REDIR_OUTA; }*/
+/*"\>{s}*{VALUE}"	{ yylval->part = sem_redir_out(sem_strdup(yytext)); return REDIR_OUT; }*/
+/*"\<{s}*{VALUE}"	{ yylval->part = sem_redir_in(sem_strdup(yytext)); return REDIR_IN; }*/
+
 %}
 
 %option noyywrap
@@ -16,8 +21,9 @@
 
 %x LINE_COMMENT
 
-WHITESPACE      [ \t]+
-NAME_CHAR       [^ \n\t;\|\$\{\}]
+s               [ \t]+
+VALUE_CHAR      [^ \n\t;\|\$\{\}]
+VALUE           [^\<\> \n\t;\|\$\{\}]{VALUE_CHAR}*
 
 %%
 
@@ -27,17 +33,18 @@ NAME_CHAR       [^ \n\t;\|\$\{\}]
 }
 
 ";"				{ return SEMIC; }
-">>"		    { return REDIR_OUTA; }
-">"				{ return REDIR_OUT; }
-"<"				{ return REDIR_IN; }
+"|"				{ return PIPE; }
 "\n"			{ return ENDL; }
+"\<"            { return REDIR_IN; }
+"\>"            { return REDIR_OUT; }
+"\>\>"          { return REDIR_OUTA; }
 "#"				{ BEGIN(LINE_COMMENT); }
 
-{NAME_CHAR}+	{ yylval->value = sem_strdup(yytext); return NAME; }
-\${NAME_CHAR}+	{ yylval->value = sem_strdup(yytext + 1); return VAR; }
+{VALUE}	        { yylval->value = sem_strdup(yytext); return VALUE; }
+\${VALUE}	    { yylval->value = sem_strdup(yytext + 1); return VAR; }
 \$\$			{ yylval->value = sem_strdup("$"); return VAR; }
 
-{WHITESPACE}	{ }
+{s}	            { }
 .				{ LEXERR("Unknown symbol '%s'.\n", yytext); return ENDL; }
 
 <<EOF>>			{ return YYEOF; }

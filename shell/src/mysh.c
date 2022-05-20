@@ -23,9 +23,12 @@ static int shell(int input_fd, bool interactive);
 static void handle_sig(int);
 static void register_sighandler(int);
 
+extern bool yydebug;
+
 int main(int argc, const char **argv) {
     (void)argc;
 
+    yydebug = false;
     register_sighandler(SIGINT);
 
     int infile = STDIN_FILENO;
@@ -125,6 +128,6 @@ void lexer_input(char *buffer, int *n_bytes, int max_bytes) {
                 }
             } break;
             }
-        } while (c != '\n');
+        } while (c != '\n' && *n_bytes != max_bytes);
     }
 }

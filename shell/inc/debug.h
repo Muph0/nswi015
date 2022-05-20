@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#define TRACE
+//#define TRACE
 
 #define _QUOTE(x) #x
 #define QUOTE(x) _QUOTE(x)
@@ -11,12 +11,11 @@
 #ifndef TRACE
 #define tracef(...)
 #else
-#define tracef(...) \
+#define tracef(format, ...) \
     do { \
         if (!_tracef_hidden(__func__)) { \
-            fprintf(stderr, "\x1b[1;30m%s:%d: ", __func__, __LINE__); \
-            fprintf(stderr, __VA_ARGS__); \
-            fprintf(stderr, "\x1b[0m\n"); \
+            fprintf(stderr, "\x1b[1;30m%s:%d: " format "\x1b[0m\n", \
+             __func__, __LINE__, __VA_ARGS__); \
         } \
     } while (0)
 

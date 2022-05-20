@@ -15,6 +15,8 @@
 
 void sem_run_command(struct command_info *cmd) {
 
+    while (cmd->piped_from) cmd = cmd->piped_from;
+
     int excode;
     runerr_t runerr = run_command(cmd, &excode);
 
@@ -58,10 +60,10 @@ struct command_info *sem_cmd_from_parts(struct command_info *info,
 struct command_info *sem_cmd_pipe_to(struct command_info *info,
                                      struct command_part *part) {
     assert(info && part);
-    info->pipe_out = sem_cmd_from_parts(NULL, part);
-    info->pipe_out->pipe_in = info;
+    info->piped_to = sem_cmd_from_parts(NULL, part);
+    info->piped_to->piped_from = info;
 
-    return info->pipe_out;
+    return info->piped_to;
 }
 
 struct command_part *sem_name(char *name) {

@@ -29,8 +29,8 @@ struct command_info {
     struct redir_info redir_out;
     struct redir_info redir_in;
 
-    struct command_info *pipe_out, *pipe_in;
-    int pipefds[2];
+    struct command_info *piped_to; // Next command after PIPE token.
+    struct command_info *piped_from; // Previous command before PIPE token.
 };
 
 int last_exit_code();

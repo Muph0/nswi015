@@ -41,7 +41,6 @@ YY_DECL;
 
 %type <command>         cmd
 %type <part>            cmdpart
-%type <part>            pipe_seq
 
 %start unit
 
@@ -49,7 +48,7 @@ YY_DECL;
 // Grammar rules
 
 unit
-    : lines YYEOF       { tracef("EOF"); }
+    : lines YYEOF       { tracef("%s", "EOF"); }
 ;
 lines
     : line
@@ -64,10 +63,6 @@ cmd_seq
     : cmd                   { sem_run_command($1); }
     | cmd_seq SEMIC cmd     { sem_run_command($3); }
 ;
-//pipe_seq
-//    : cmd                   { $$ = sem_run_command_to_pipe($1, -1); }
-//    | pipe_seq cmd PIPE     { $$ = sem_run_command_to_pipe($2, $1); }
-//;
 cmd
     : cmdpart           { $$ = sem_cmd_from_parts(NULL, $1); }
     | cmd cmdpart       { $$ = sem_cmd_from_parts($1, $2); }

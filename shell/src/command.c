@@ -15,6 +15,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+static char *get_current_dir_name();
+
 static int exit_code_ = 0;
 int last_exit_code() { return exit_code_; }
 
@@ -25,81 +27,94 @@ int last_exit_code() { return exit_code_; }
  * @param exit_code Output param with exit code of the command.
  * @returns Status of the command execution.
  */
-runerr_t run_command(struct command_info *cmd, int *exit_code) {
+runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
 
-    int argc = alist_count(cmd->argv);
-    char **argv = &alist_ref(cmd->argv, char *, 0);
-
-    assert(argc >= 1);
-    tracef("(%s, argc=%d)", argv[0], argc);
-
-    runerr_t retval = run_internal_command(argv, argc, exit_code);
+    assert(cmdinfo);
+    runerr_t retval =
+        run_internal_command(&alist_ref(cmdinfo->argv, char *, 0),
+                             alist_count(cmdinfo->argv), exit_code);
 
     if (retval == RUNERR_NOCMD) {
         // try external command
-        pid_t pid = fork();
 
-        if (cmd->pipe_out) {
-            pipe(cmd->pipefds);
-        }
+        pid_t pid;
+        int pd_0 = -1;
+        int children = 0;
 
-        if (pid == -1) {
-            err(1, "fork");
-        } else if (pid == 0) {
-            // child
+        for (struct command_info *cmd = cmdinfo; //
+             cmd != NULL; cmd = cmd->piped_to) {
 
-            // pipe redirect
-            if (cmd->pipe_in) {
-                int fd = cmd->pipe_in->pipefds[0];
-                dup2(fd, STDIN_FILENO);
-                close(fd);
-            }
-            if (cmd->pipe_out) {
-                int fd = cmd->pipefds[1];
-                dup2(fd, STDOUT_FILENO);
-                close(fd);
+            alist_append(cmd->argv, char *, (char *)NULL);
+            char **argv = alist_begin(cmd->argv, char *);
+
+            int first = cmd->piped_from == NULL;
+            int last = cmd->piped_to == NULL;
+
+            int pd[2];
+            if (!last) {
+                if (pipe(pd) == -1) err(1, "pipe");
             }
 
-            // file redirect
-            if (cmd->redir_in.type != REDIR_TYPE_NONE) {
-                int fd = open(cmd->redir_in.filename, O_RDONLY);
-                dup2(fd, STDIN_FILENO);
-                close(fd);
-            }
-            if (cmd->redir_out.type != REDIR_TYPE_NONE) {
-                int flags =
-                    O_CREAT | O_WRONLY |
-                    (cmd->redir_out.type == REDIR_TYPE_APPEND ? O_APPEND : 0);
-                int fd = open(cmd->redir_out.filename, flags, 0644);
-                dup2(fd, STDOUT_FILENO);
-                close(fd);
-            }
+            switch (pid = fork()) {
+            case -1:
+                err(1, "fork");
+            case 0: // child
+                // pipe redirect
+                if (!last) {
+                    dup2(pd[1], 1);
+                }
+                if (!first) {
+                    dup2(pd_0, 0);
+                    close(pd_0);
+                }
+                close(pd[0]);
+                close(pd[1]);
 
-            // execvp needs nul-terminated
-            alist_append(cmd->argv, char *, NULL);
-            execvp(argv[0], argv);
-            // if returns, print error
-            err(127, "unknown command");
+                // file redirect
+                if (cmd->redir_in.type != REDIR_TYPE_NONE) {
+                    int fd = open(cmd->redir_in.filename, O_RDONLY);
+                    dup2(fd, STDIN_FILENO);
+                    close(fd);
+                }
+                if (cmd->redir_out.type != REDIR_TYPE_NONE) {
+                    int flags =
+                        O_CREAT | O_WRONLY |
+                        (cmd->redir_out.type == REDIR_TYPE_APPEND ? O_APPEND
+                                                                  : 0);
+                    int fd = open(cmd->redir_out.filename, flags, 0644);
+                    dup2(fd, STDOUT_FILENO);
+                    close(fd);
+                }
+
+                execvp(argv[0], argv);
+                err(127, "unknown command");
+            default:
+                children++;
+                if (!last) {
+                    close(pd[1]);
+                    pd_0 = pd[0];
+                }
+                break;
+            }
         }
 
         // parent
-        tracef("fork() -> %d", pid);
-
-        int status, cpid;
-        do {
-            tracef("wait(%d)", pid);
+        int waitfor = children;
+        while (waitfor--) {
+            int status, cpid;
+            tracef("waiting for %d children", waitfor);
             cpid = wait(&status);
             tracef("wait returned (child=%d, status=%u)", cpid, status);
 
-            if (WIFEXITED(status)) {
-                *exit_code = WEXITSTATUS(status);
-            } else if (WIFSIGNALED(status)) {
-                // |128 according to bash
-                *exit_code = WTERMSIG(status) | 128;
+            if (cpid == pid) { // pid of the last child
+                if (WIFEXITED(status)) {
+                    *exit_code = WEXITSTATUS(status);
+                } else if (WIFSIGNALED(status)) {
+                    // | 128 according to bash
+                    *exit_code = WTERMSIG(status) | 128;
+                }
             }
-            // child gets killed magically on its own (?)
-        } while (cpid != pid);
-
+        }
         retval = RUNERR_OK;
     }
 
@@ -194,9 +209,22 @@ void command_info_destroy(struct command_info *info) {
         alist_destroy(info->argv);
         free(info->redir_in.filename);
         free(info->redir_out.filename);
-        struct command_info *next = info->pipe_out;
+        struct command_info *next = info->piped_to;
         free(info);
 
         info = next;
     }
+}
+
+static char *get_current_dir_name() {
+    size_t size = 64;
+    char *buf = malloc_chk(size);
+    char *result = NULL;
+    while (result == NULL) {
+        result = getcwd(buf, size);
+        if (result == NULL && errno != ERANGE) {
+            err(1, "couldn't get working directory name");
+        }
+    }
+    return result;
 }

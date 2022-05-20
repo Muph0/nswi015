@@ -17,6 +17,8 @@
 
 static int shell_input_fd_;
 static bool shell_interactive_;
+static const char *input_string_ = NULL;
+const char *program_argv_0;
 
 static int shell(int input_fd, bool interactive);
 
@@ -27,6 +29,7 @@ extern bool yydebug;
 
 int main(int argc, const char **argv) {
     (void)argc;
+    program_argv_0 = argv[0];
 
     yydebug = false;
     register_sighandler(SIGINT);
@@ -35,10 +38,21 @@ int main(int argc, const char **argv) {
     bool interactive = true;
 
     for (const char **it = argv + 1; *it; it++) {
-        if (*it[0] == '-') {
+        if ((*it)[0] == '-') {
             // parse options
+            switch ((*it)[1]) {
+            case 'c':
+                input_string_ = *(++it);
+                interactive = false;
+                break;
+            default:
+                errx(1, "unknown option");
+            }
         } else {
             // first non-option is a script file
+            if (input_string_ != NULL) {
+                err(1, "cannot combine -c option with file argument");
+            }
             if ((infile = open(*it, 0)) < 0) {
                 err(1, "open file");
             }
@@ -93,13 +107,21 @@ void lexer_input(char *buffer, int *n_bytes, int max_bytes) {
     *n_bytes = 0;
 
     if (eof) {
-        tracef("read() -> EOF");
+        tracef("%s", "read() -> EOF");
         return;
     }
 
     if (!shell_interactive_) {
-        read_ret = read(shell_input_fd_, buffer, max_bytes);
-        *n_bytes = (read_ret >= 0) * read_ret;
+        if (input_string_) {
+            read_ret = strlen(input_string_);
+            read_ret = read_ret > max_bytes ? max_bytes : read_ret;
+            memcpy(buffer, input_string_, read_ret);
+            input_string_ += read_ret;
+            *n_bytes = read_ret;
+        } else {
+            read_ret = read(shell_input_fd_, buffer, max_bytes);
+            *n_bytes = (read_ret >= 0) * read_ret;
+        }
 
     } else {
     prompt:

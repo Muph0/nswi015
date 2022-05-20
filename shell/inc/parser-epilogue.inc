@@ -8,17 +8,16 @@
 #include <err.h>
 
 int yyerror(YYLTYPE *loc, const char *message) {
-    warnx("Syntax error:%d.%d: %s\n", loc->first_line,
-                  loc->first_column, message);
+    warnx("Syntax error:%d.%d: %s\n", loc->first_line, loc->first_column,
+          message);
 
     return 0;
 }
 
-
 static int yyreport_syntax_error(const yypcontext_t *ctx) {
-    extern char *program_invocation_short_name;
+    extern const char *program_argv_0;
     int res = 0;
-    fprintf(stderr, "%s:", program_invocation_short_name);
+    fprintf(stderr, "%s:", program_argv_0);
     YYLOCATION_PRINT(stderr, yypcontext_location(ctx));
     fprintf(stderr, ": syntax error");
     // Report the tokens expected at this point.

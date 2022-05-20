@@ -1,4 +1,4 @@
-.PHONY: all clean list run
+.PHONY: all clean list run test-all test-1 test-2
 
 # Settings
 
@@ -6,17 +6,18 @@ F = @printf "\e[1;34mmake $@:\e[0m "
 MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 
 CC = gcc
-CFLAGS = -g -std=c99 -posix \
+CFLAGS = -g -std=c99 -posix -O2 \
 	$(addprefix -I, $(HEADER_DIRS)) \
 	$(addprefix -D, $(DEFINES))\
 	-Wall -Wextra -Werror \
 	-Wno-error=unused-parameter -Wno-error=unused-function \
-	-Wno-error=unused-variable -Wno-error=unused-but-set-variable
+	-Wno-error=unused-variable -Wno-error=unused-but-set-variable \
+	-Wno-unused-function
 LD = gcc
 LFLAGS =
 DEPFLAGS = $(CFLAGS) -MM -MT $*.o -MF $*.dep -MP
 
-DEFINES = YYDEBUG _POSIX_C_SOURCE=1 _GNU_SOURCE
+DEFINES = YYDEBUG _POSIX_C_SOURCE=200112 _XOPEN_SOURCE
 
 # Files
 
@@ -75,6 +76,16 @@ $(FLEX_SRC): %.yy.c: %.l
 ../ads/libads.a:
 	$F
 	make -C ../ads
+
+test-all: mysh
+	$F
+	cd tests; ./run-tests.sh
+test-1: mysh
+	$F
+	cd tests; ./run-tests.sh `cat ./phase-1.tests`
+test-2: mysh
+	$F
+	cd tests; ./run-tests.sh `cat ./wip.tests`
 
 list: # check all paths are correctly set up
 	$F

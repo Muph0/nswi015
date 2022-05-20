@@ -6,6 +6,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <llist.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,11 +39,26 @@ runerr_t run_command(struct command_info *cmd, int *exit_code) {
         // try external command
         pid_t pid = fork();
 
+        if (cmd->pipe_out) {
+            pipe(cmd->pipefds);
+        }
+
         if (pid == -1) {
             err(1, "fork");
         } else if (pid == 0) {
             // child
 
+            // pipe redirect
+            if (cmd->pipe_in) {
+                int fd = cmd->pipe_in->pipefds[0];
+                dup2(fd, STDIN_FILENO);
+                close(fd);
+            }
+            if (cmd->pipe_out) {
+                int fd = cmd->pipefds[1];
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
+            }
 
             // file redirect
             if (cmd->redir_in.type != REDIR_TYPE_NONE) {
@@ -178,7 +194,7 @@ void command_info_destroy(struct command_info *info) {
         alist_destroy(info->argv);
         free(info->redir_in.filename);
         free(info->redir_out.filename);
-        struct command_info *next = info->pipe_to;
+        struct command_info *next = info->pipe_out;
         free(info);
 
         info = next;

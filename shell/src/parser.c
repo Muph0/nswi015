@@ -58,10 +58,10 @@ struct command_info *sem_cmd_from_parts(struct command_info *info,
 struct command_info *sem_cmd_pipe_to(struct command_info *info,
                                      struct command_part *part) {
     assert(info && part);
-    info->pipe_to = sem_cmd_from_parts(NULL, part);
-    info->pipe_to->pipe_from = info;
+    info->pipe_out = sem_cmd_from_parts(NULL, part);
+    info->pipe_out->pipe_in = info;
 
-    return info->pipe_to;
+    return info->pipe_out;
 }
 
 struct command_part *sem_name(char *name) {

@@ -29,7 +29,7 @@ struct command_info {
     struct redir_info redir_out;
     struct redir_info redir_in;
 
-    struct command_info *pipe_to, *pipe_from;
+    struct command_info *pipe_out, *pipe_in;
     int pipefds[2];
 };
 

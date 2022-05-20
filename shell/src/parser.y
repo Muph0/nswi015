@@ -71,7 +71,7 @@ cmd_seq
 cmd
     : cmdpart           { $$ = sem_cmd_from_parts(NULL, $1); }
     | cmd cmdpart       { $$ = sem_cmd_from_parts($1, $2); }
-    | cmd PIPE cmdpart  { $$ = sem_cmd_pipe_to($1, $2); }
+    | cmd PIPE cmdpart  { $$ = sem_cmd_pipe_to($1, $3); }
 ;
 cmdpart
     : VALUE             { $$ = sem_name($1); }

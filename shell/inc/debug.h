@@ -3,14 +3,12 @@
 
 #include <string.h>
 
-#define TRACE
+#define TRACE 0
 
 #define _QUOTE(x) #x
 #define QUOTE(x) _QUOTE(x)
 
-#ifndef TRACE
-#define tracef(...)
-#else
+#if TRACE
 #define tracef(format, ...) \
     do { \
         if (!_tracef_hidden(__func__)) { \
@@ -34,6 +32,8 @@ static int _tracef_hidden(const char *name) {
     }
     return 0;
 }
+#else
+#define tracef(...)
 #endif
 
 #endif

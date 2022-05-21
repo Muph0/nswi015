@@ -55,7 +55,7 @@ clean:
 	$F
 	rm -f $(SHELL_BIN)
 
-$(SHELL_BIN): %: $(ALL_OBJ) $(STATIC_LIBS)
+mysh: $(ALL_OBJ) $(STATIC_LIBS)
 	$F
 	$(LD) $(LFLAGS) $^ -o $@
 #	@sed -i 's/"defines" *: *\[.*\]/"defines": \[$(foreach def,$(DEFINES),"$(def)",)\]/' \
@@ -77,15 +77,23 @@ $(FLEX_SRC): %.yy.c: %.l
 	$F
 	make -C ../ads
 
-test-all: mysh
+test-all: trace-disable mysh
 	$F
 	cd tests; ./run-tests.sh
-test-1: mysh
+test-1: trace-disable mysh
 	$F
 	cd tests; ./run-tests.sh `cat ./phase-1.tests`
-test-2: mysh
+test-2: trace-disable mysh
 	$F
 	cd tests; ./run-tests.sh `cat ./wip.tests`
+
+trace-enable:
+	$F
+	sed 's/TRACE 0/TRACE 1/' -i inc/debug.h
+trace-disable:
+	$F
+	sed 's/TRACE 1/TRACE 0/' -i inc/debug.h
+
 
 list: # check all paths are correctly set up
 	$F

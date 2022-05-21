@@ -20,7 +20,6 @@ static char *get_current_dir_name();
 static int exit_code_ = 0;
 int last_exit_code() { return exit_code_; }
 
-
 #define trace_exec(argv, argc) \
     switch (argc) { \
     case 1: \
@@ -37,7 +36,6 @@ int last_exit_code() { return exit_code_; }
                argc - 3); \
         break; \
     }
-
 
 /**
  * @brief Runs command with specified arguments.
@@ -117,17 +115,15 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
                 execvp(argv[0], argv);
                 err(127, "unknown command");
             default:
+                tracef("parent: fork() = %d", pid);
                 children++;
                 if (!first) {
                     close(pd_0);
                     tracef("parent: close(%d)", pd_0);
                 }
-                if (!last) {
-                    close(pd[1]);
-                    tracef("parent: close(%d)", pd[1]);
-                    pd_0 = pd[0];
-                    tracef("parent: passing pipefd %d to next child", pd_0);
-                }
+                pd_0 = pd[0];
+                close(pd[1]);
+                tracef("parent: close(%d), pass %d to next child", pd[1], pd_0);
                 break;
             }
         }

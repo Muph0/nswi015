@@ -121,9 +121,11 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
                     close(pd_0);
                     tracef("parent: close(%d)", pd_0);
                 }
-                pd_0 = pd[0];
-                close(pd[1]);
-                tracef("parent: close(%d), pass %d to next child", pd[1], pd_0);
+                if (!last) {
+                    pd_0 = pd[0];
+                    close(pd[1]);
+                    tracef("parent: close(%d), pass %d to next child", pd[1], pd_0);
+                }
                 break;
             }
         }

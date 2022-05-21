@@ -35,7 +35,7 @@ int main(int argc, const char **argv) {
     register_sighandler(SIGINT);
 
     int infile = STDIN_FILENO;
-    bool interactive = true;
+    bool interactive = isatty(STDIN_FILENO);
 
     for (const char **it = argv + 1; *it; it++) {
         if ((*it)[0] == '-') {

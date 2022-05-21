@@ -86,7 +86,7 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
                     tracef("child: dup2(%d, %d)", pd[1], 1);
                     close(pd[0]);
                     close(pd[1]);
-                    tracef("child: closing %d %d", pd[0], pd[1]);
+                    tracef("child: close(%d, %d)", pd[0], pd[1]);
                 }
                 if (!first) {
                     dup2(pd_0, 0);
@@ -118,6 +118,10 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
                 err(127, "unknown command");
             default:
                 children++;
+                if (!first) {
+                    close(pd_0);
+                    tracef("parent: close(%d)", pd_0);
+                }
                 if (!last) {
                     close(pd[1]);
                     tracef("parent: close(%d)", pd[1]);

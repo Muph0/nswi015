@@ -20,6 +20,25 @@ static char *get_current_dir_name();
 static int exit_code_ = 0;
 int last_exit_code() { return exit_code_; }
 
+
+#define trace_exec(argv, argc) \
+    switch (argc) { \
+    case 1: \
+        tracef("child exec: %s", argv[0]); \
+        break; \
+    case 2: \
+        tracef("child exec: %s %s", argv[0], argv[1]); \
+        break; \
+    case 3: \
+        tracef("child exec: %s %s %s", argv[0], argv[1], argv[2]); \
+        break; \
+    default: \
+        tracef("child exec: %s %s %s... (%d more)", argv[0], argv[1], argv[2], \
+               argc - 3); \
+        break; \
+    }
+
+
 /**
  * @brief Runs command with specified arguments.
  *
@@ -46,6 +65,7 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
 
             alist_append(cmd->argv, char *, (char *)NULL);
             char **argv = alist_begin(cmd->argv, char *);
+            int argc = alist_count(cmd->argv) - 1;
 
             int first = cmd->piped_from == NULL;
             int last = cmd->piped_to == NULL;
@@ -53,6 +73,7 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
             int pd[2];
             if (!last) {
                 if (pipe(pd) == -1) err(1, "pipe");
+                tracef("pipe([r:%d, w:%d])", pd[0], pd[1]);
             }
 
             switch (pid = fork()) {
@@ -62,37 +83,46 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
                 // pipe redirect
                 if (!last) {
                     dup2(pd[1], 1);
+                    tracef("child: dup2(%d, %d)", pd[1], 1);
+                    close(pd[0]);
+                    close(pd[1]);
+                    tracef("child: closing %d %d", pd[0], pd[1]);
                 }
                 if (!first) {
                     dup2(pd_0, 0);
                     close(pd_0);
+                    tracef("child: dup2(%d, %d)", pd_0, 0);
+                    tracef("child: close(%d)", pd_0);
                 }
-                close(pd[0]);
-                close(pd[1]);
 
                 // file redirect
                 if (cmd->redir_in.type != REDIR_TYPE_NONE) {
                     int fd = open(cmd->redir_in.filename, O_RDONLY);
                     dup2(fd, STDIN_FILENO);
                     close(fd);
+                    printf("child: &%d < %s", STDIN_FILENO,
+                           cmd->redir_in.filename);
                 }
                 if (cmd->redir_out.type != REDIR_TYPE_NONE) {
-                    int flags =
-                        O_CREAT | O_WRONLY |
-                        (cmd->redir_out.type == REDIR_TYPE_APPEND ? O_APPEND
-                                                                  : 0);
+                    int append = cmd->redir_out.type == REDIR_TYPE_APPEND;
+                    int flags = O_CREAT | O_WRONLY | (append ? O_APPEND : 0);
                     int fd = open(cmd->redir_out.filename, flags, 0644);
                     dup2(fd, STDOUT_FILENO);
                     close(fd);
+                    printf("child: &%d %s %s", STDIN_FILENO,
+                           append ? ">>" : ">", cmd->redir_in.filename);
                 }
 
+                trace_exec(argv, argc);
                 execvp(argv[0], argv);
                 err(127, "unknown command");
             default:
                 children++;
                 if (!last) {
                     close(pd[1]);
+                    tracef("parent: close(%d)", pd[1]);
                     pd_0 = pd[0];
+                    tracef("parent: passing pipefd %d to next child", pd_0);
                 }
                 break;
             }
@@ -102,10 +132,10 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
         int waitfor = children;
         while (waitfor) {
             int status, cpid;
-            tracef("waiting for %d children", waitfor);
+            tracef("parent: waiting for %d children", waitfor);
             cpid = wait(&status);
             waitfor--;
-            tracef("wait returned (child=%d, status=%u)", cpid, status);
+            tracef("parent: wait returned (child=%d, status=%u)", cpid, status);
 
             if (cpid == pid) { // pid of the last child
                 if (WIFEXITED(status)) {

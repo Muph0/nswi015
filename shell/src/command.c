@@ -124,7 +124,8 @@ runerr_t run_command(struct command_info *cmdinfo, int *exit_code) {
                 if (!last) {
                     pd_0 = pd[0];
                     close(pd[1]);
-                    tracef("parent: close(%d), pass %d to next child", pd[1], pd_0);
+                    tracef("parent: close(%d), pass %d to next child", pd[1],
+                           pd_0);
                 }
                 break;
             }
@@ -255,8 +256,17 @@ static char *get_current_dir_name() {
     char *result = NULL;
     while (result == NULL) {
         result = getcwd(buf, size);
-        if (result == NULL && errno != ERANGE) {
-            err(1, "couldn't get working directory name");
+        if (result == NULL) {
+            switch (errno) {
+            case ERANGE:
+                free(buf);
+                size *= 2;
+                buf = malloc_chk(size);
+                break;
+
+            default:
+                err(1, "couldn't get working directory name");
+            }
         }
     }
     return result;
